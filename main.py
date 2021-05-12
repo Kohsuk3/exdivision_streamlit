@@ -23,10 +23,10 @@ def main():
             '今日の日付をファイル名にする', value=False, key=None, help=None)
         if day_check:
             input_text = str(datetime.date.today())
-
         if len(input_text) > 1:
             st.write(f'保存後のファイル名：{input_text}_1.xlsx / {input_text}_2.xlsx...')
             form = st.form('form')
+            count_div_file(file, input_num, form)
             submitted = form.form_submit_button("分割開始")
             if submitted:
                 division(file, input_num, input_text)
@@ -44,7 +44,9 @@ def division(file, input_num, input_text):
     max_col = openpyxl.utils.get_column_letter(ws.max_column)
     # 分割行数をdiv_rowに代入
     div_row = input_num
+    # 処理を行うファイル数を取得
     files = math.ceil(ws.max_row/div_row)
+    st.write(f'{files}個のファイルに分割しています。')
     for file_count in range(1, files+1):
         new_wb = openpyxl.Workbook()
         new_ws = new_wb.worksheets[0]
@@ -57,6 +59,7 @@ def division(file, input_num, input_text):
             new_wb, input_text, file_count), unsafe_allow_html=True)
         start_row = div_row + 1
         div_row += input_num
+    st.write('完了しました。')
 
 
 def load_cells(sheet_range):
@@ -90,6 +93,22 @@ def get_table_download_link(new_wb, input_text, file_count):
     wb = save_virtual_workbook(new_wb)
     bs64 = base64.b64encode(wb).decode('UTF-8')
     return f'<a href="data:file/xlsx;base64,{bs64}" download="{input_text}_{file_count}.xlsx">ダウンロード：{input_text}_{file_count}.xlsx</a>'
+
+
+def count_div_file(file, input_num, form):
+    wb = openpyxl.load_workbook(file)
+    # シートを開く
+    ws = wb.worksheets[0]
+    # スタート行を指定
+    start_row = 1
+    # 最終行を取得
+    max_col = openpyxl.utils.get_column_letter(ws.max_column)
+    # 分割行数をdiv_rowに代入
+    div_row = input_num
+    # 処理を行うファイル数を取得
+    files = math.ceil(ws.max_row/div_row)
+
+    return form.write(f'{files}個のファイルに分割されます')
 
 
 if __name__ == '__main__':
